@@ -22,58 +22,38 @@ pols_data =
   read_csv("./datastore/pols-month.csv") |>
   janitor::clean_names() |>
   separate(mon, into = c("year", "month", "day"), "-") |>
-  mutate(month = case_match(
-    month,
-    "01" ~ "Jan",
-    "02" ~ "Feb",
-    "03" ~ "Mar",
-    "04" ~ "Apr",
-    "05" ~ "May",
-    "06" ~ "Jun",
-    "07" ~ "JUl",
-    "08" ~ "Aug",
-    "09" ~ "Sep",
-    "10" ~ "Oct",
-    "11" ~ "Nov",
-    "12" ~ "Dec"
-  )) |>
+  mutate(month = month.name[as.numeric(month)]) |>
+  mutate(year_month = paste(year, month, sep = "-")) |>
+  #the same as
+  #mutate(month = case_match(month, case_match(month,"01"~"Jan"), ...)
   #OR using
-  #mutate(month = case_when(
-  #month == "01" ~ "Jan"), ...)
+  #mutate(month = case_when(month=="01"~"Jan"), ...)
   mutate(president = case_when(
-    prez_gop == "1" ~ "gop",
-    prez_dem == "1" ~ "dem"
+    prez_gop != "0" ~ "gop",
+    prez_dem != "0" ~ "dem"
   )) |>
   select(-c("day", "prez_gop", "prez_dem")) |>
-  select(year, month, president, everything())
+  select(year_month, year, month, president, everything())
 pols_data
 ```
 
 `snp_data` is from `snp.csv`. Variables are arranged by order of `year`, `month`, `close`.
 
 ```{r, message = FALSE}
+substr(snp_data$date, start = 5, stop = 6)
+
+  separate(separate(date, into = c("month", "day", "year"), "/")) |>
+  mutate(year = ifelse(year >= 50 & year < 69,  paste("19", year), paste("20", year)))
+
 snp_data =
   read_csv("./datastore/snp.csv") |>
   janitor::clean_names() |>
-  mutate(date = as.Date(date, "%m/%d/%y")) |>
-  separate(date, into = c("year", "month", "day"), "-") |>
-  mutate(month = case_match(
-    month,
-    "01" ~ "Jan",
-    "02" ~ "Feb",
-    "03" ~ "Mar",
-    "04" ~ "Apr",
-    "05" ~ "May",
-    "06" ~ "Jun",
-    "07" ~ "JUl",
-    "08" ~ "Aug",
-    "09" ~ "Sep",
-    "10" ~ "Oct",
-    "11" ~ "Nov",
-    "12" ~ "Dec"
-  )) |>
-  select(-c("day")) |>
-  select(year, month, everything())
+  separate(date, into = c("month", "day", "year"), "/") |>
+  mutate(year = str_replace_all((ifelse(year >= 30 & year <= 99,  paste("19", year), paste("20", year))),"[^0-9]", "")) |>
+  mutate(month = month.name[as.numeric(month)]) |>
+  mutate(year_month = paste(year, month, sep = "-")) |>
+  select(-day) |>
+  select(year_month, year, month, everything())
 snp_data
 ```
 
@@ -88,10 +68,20 @@ unemployment_data =
     names_to = "month",
     values_to = "unemployment_rate"
   ) |>
-  mutate(month = str_to_title(month)) |>
-  select(year, month, everything())
+  mutate(month = month.name[match(str_to_title(month), month.abb)]) |>
+  mutate(year_month = paste(year, month, sep = "-")) |>
+  select(year_month, year, month, everything())
 unemployment_data
 ```
+
+### Problem 1.2 JOINING DATASETS
+```{r, message = FALSE}
+pols_snp = inner_join(pols_data, snp_data, by = "year_month") |>
+  rename(year = year.x, month = month.x) |>
+  select(year_month, year, month, president, close) |>
+  arrange(year)
+```
+
 
 
 
