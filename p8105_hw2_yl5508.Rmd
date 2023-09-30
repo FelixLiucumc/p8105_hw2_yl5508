@@ -1,0 +1,21 @@
+---
+title: "p8105_hw2_yl5508"
+author: "Yifei LIU"
+date: 2023/9/30
+output:
+  github_document: 
+    toc_float: TRUE
+---
+
+It's a proj for HW2 about DATA WRANGLING.
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+```
+
+## Problem 1
+
+### Problem 1.1 DATA CLEANING
+
+
+
