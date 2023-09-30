@@ -2,9 +2,7 @@
 title: "p8105_hw2_yl5508"
 author: "Yifei LIU"
 date: 2023/9/30
-output:
-  github_document: 
-    toc_float: TRUE
+output: github_document
 ---
 
 It's a proj for HW2 about DATA WRANGLING.
@@ -16,6 +14,87 @@ library(tidyverse)
 ## Problem 1
 
 ### Problem 1.1 DATA CLEANING
+
+`pols_data` is from `pols-month.csv`. Variables are arranged by order of `year`, `month`, `president`, ... .
+
+```{r, message = FALSE}
+pols_data =
+  read_csv("./datastore/pols-month.csv") |>
+  janitor::clean_names() |>
+  separate(mon, into = c("year", "month", "day"), "-") |>
+  mutate(month = case_match(
+    month,
+    "01" ~ "Jan",
+    "02" ~ "Feb",
+    "03" ~ "Mar",
+    "04" ~ "Apr",
+    "05" ~ "May",
+    "06" ~ "Jun",
+    "07" ~ "JUl",
+    "08" ~ "Aug",
+    "09" ~ "Sep",
+    "10" ~ "Oct",
+    "11" ~ "Nov",
+    "12" ~ "Dec"
+  )) |>
+  #OR using
+  #mutate(month = case_when(
+  #month == "01" ~ "Jan"), ...)
+  mutate(president = case_when(
+    prez_gop == "1" ~ "gop",
+    prez_dem == "1" ~ "dem"
+  )) |>
+  select(-c("day", "prez_gop", "prez_dem")) |>
+  select(year, month, president, everything())
+pols_data
+```
+
+`snp_data` is from `snp.csv`. Variables are arranged by order of `year`, `month`, `close`.
+
+```{r, message = FALSE}
+snp_data =
+  read_csv("./datastore/snp.csv") |>
+  janitor::clean_names() |>
+  mutate(date = as.Date(date, "%m/%d/%y")) |>
+  separate(date, into = c("year", "month", "day"), "-") |>
+  mutate(month = case_match(
+    month,
+    "01" ~ "Jan",
+    "02" ~ "Feb",
+    "03" ~ "Mar",
+    "04" ~ "Apr",
+    "05" ~ "May",
+    "06" ~ "Jun",
+    "07" ~ "JUl",
+    "08" ~ "Aug",
+    "09" ~ "Sep",
+    "10" ~ "Oct",
+    "11" ~ "Nov",
+    "12" ~ "Dec"
+  )) |>
+  select(-c("day")) |>
+  select(year, month, everything())
+snp_data
+```
+
+`unemployment_data` is from `unemployment.csv`. Variables are arranged by order of `year`, `month`, `unemployment_rate`.
+
+```{r, message = FALSE}
+unemployment_data =
+  read_csv("./datastore/unemployment.csv") |>
+  janitor::clean_names() |>
+  pivot_longer(
+    jan:dec,
+    names_to = "month",
+    values_to = "unemployment_rate"
+  ) |>
+  mutate(month = str_to_title(month)) |>
+  select(year, month, everything())
+unemployment_data
+```
+
+
+
 
 
 
