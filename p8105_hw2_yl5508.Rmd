@@ -34,17 +34,12 @@ pols_data =
   )) |>
   select(-c("day", "prez_gop", "prez_dem")) |>
   select(year_month, year, month, president, everything())
-pols_data
+head(pols_data, 5)
 ```
 
 `snp_data` is from `snp.csv`. Variables are arranged by order of `year`, `month`, `close`.
 
 ```{r, message = FALSE}
-substr(snp_data$date, start = 5, stop = 6)
-
-  separate(separate(date, into = c("month", "day", "year"), "/")) |>
-  mutate(year = ifelse(year >= 50 & year < 69,  paste("19", year), paste("20", year)))
-
 snp_data =
   read_csv("./datastore/snp.csv") |>
   janitor::clean_names() |>
@@ -54,7 +49,7 @@ snp_data =
   mutate(year_month = paste(year, month, sep = "-")) |>
   select(-day) |>
   select(year_month, year, month, everything())
-snp_data
+head(snp_data, 5)
 ```
 
 `unemployment_data` is from `unemployment.csv`. Variables are arranged by order of `year`, `month`, `unemployment_rate`.
@@ -71,7 +66,7 @@ unemployment_data =
   mutate(month = month.name[match(str_to_title(month), month.abb)]) |>
   mutate(year_month = paste(year, month, sep = "-")) |>
   select(year_month, year, month, everything())
-unemployment_data
+head(unemployment_data, 5)
 ```
 
 ### Problem 1.2 JOINING DATASETS
@@ -80,9 +75,14 @@ pols_snp = inner_join(pols_data, snp_data, by = "year_month") |>
   rename(year = year.x, month = month.x) |>
   select(year_month, year, month, president, close) |>
   arrange(year)
+head(pols_snp, 5)
 ```
 
+```{r, message = FALSE}
+skimr::skim(pols_snp)
+```
 
+## Problem 2
 
 
 
