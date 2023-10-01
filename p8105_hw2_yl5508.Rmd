@@ -9,13 +9,14 @@ It's a proj for HW2 about DATA WRANGLING.
 
 ```{r, echo = FALSE, message = FALSE}
 library(tidyverse)
+library(readxl)
 ```
 
 ## Problem 1
 
 ### Problem 1.1 DATA CLEANING
 
-`pols_data` is from `pols-month.csv`. Variables are arranged by order of `year`, `month`, `president`, ... .
+`pols_data` is from `pols-month.csv`. Variables are arranged by order of `year-month`, `year`, `month`, `president`, ... .
 
 ```{r, message = FALSE}
 pols_data =
@@ -37,7 +38,7 @@ pols_data =
 head(pols_data, 5)
 ```
 
-`snp_data` is from `snp.csv`. Variables are arranged by order of `year`, `month`, `close`.
+`snp_data` is from `snp.csv`. Variables are arranged by order of `year-month`, `year`, `month`, `close`.
 
 ```{r, message = FALSE}
 snp_data =
@@ -52,7 +53,7 @@ snp_data =
 head(snp_data, 5)
 ```
 
-`unemployment_data` is from `unemployment.csv`. Variables are arranged by order of `year`, `month`, `unemployment_rate`.
+`unemployment_data` is from `unemployment.csv`. Variables are arranged by order of `year-month`, `year`, `month`, `unemployment_rate`.
 
 ```{r, message = FALSE}
 unemployment_data =
@@ -83,6 +84,69 @@ skimr::skim(pols_snp)
 ```
 
 ## Problem 2
+
+### Problem 2.1 DATA CLEANING
+
+```{r, message = FALSE}
+mrt_data =
+  read_excel("./datastore/202207 Trash Wheel Collection Data.xlsx", sheet = 1, range = "A2:N549") |>
+  janitor::clean_names() |>
+  separate(date, into=c("y", "m", "day"), sep = "-") |>
+  select(-y, -m) |>
+  mutate(year = as.character(year)) |>
+  mutate(homes_powered = weight_tons*500/30) |>
+  mutate(sourcename = "Mr. Trash Wheel") |>
+  select(sourcename, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts)
+head(mrt_data, 5)
+
+pro_data =
+  read_excel("./datastore/202207 Trash Wheel Collection Data.xlsx", sheet = 2, range = "A2:M96") |>
+  janitor::clean_names() |>
+  separate(date, into=c("y", "m", "day"), sep = "-") |>
+  select(-y, -m) |>
+  mutate(year = as.character(year)) |>
+  mutate(homes_powered = weight_tons*500/30) |>
+  mutate(sourcename = "Professor Trash Wheel") |>
+  select(sourcename, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts)
+head(pro_data, 5)
+
+gwy_data =
+  read_excel("./datastore/202207 Trash Wheel Collection Data.xlsx", sheet = 4, range = "A2:K108") |>
+  janitor::clean_names() |>
+  separate(date, into=c("y", "m", "day"), sep = "-") |>
+  select(-y, -m) |>
+  mutate(year = as.character(year)) |>
+  mutate(homes_powered = weight_tons*500/30) |>
+  mutate(sourcename = "Gwynnda") |>
+  select(sourcename, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts)
+head(gwy_data, 5)
+
+total_data = 
+  bind_rows(mrt_data, pro_data, gwy_data) |>
+  arrange(year, match(month, month.name), day)
+head(total_data, 5)
+```
+
+```{r, message = FALSE}
+skimr::skim(total_data)
+```
+
+`#` of observations in resulting dataset is `r nrow(total_data)``.
+total weight collected by Professor Trash Wheel is `r total_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(weight_tons))`
+
+`r total_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(cigarette_butts))`
+
+` total_data |> filter(sourcename == "Professor Trash Wheel") |> sum(weight_tons)`
+
+` total_data |> filter(sourcename == "Professor Trash Wheel") |> sum(pull(weight_tons))`.
+
+
+## Problem 3
+
+### Problem 3.1 DATA CLEANING
+
+
+
 
 
 
