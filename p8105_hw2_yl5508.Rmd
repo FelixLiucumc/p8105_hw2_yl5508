@@ -7,16 +7,20 @@ output: github_document
 
 It's a proj for HW2 about DATA WRANGLING.
 
-```{r, echo = FALSE, message = FALSE}
+```{r setup, echo = FALSE, message = FALSE}
 library(tidyverse)
 library(readxl)
+options(scipen = 999)
+options(digits = 2)
 ```
 
 ## Problem 1
 
 ### Problem 1.1 DATA CLEANING
 
-`pols_data` is from `pols-month.csv`. Variables are arranged by order of `year-month`, `year`, `month`, `president`, ... .
+**(1.1.1)** `pols_data` is from `pols-month.csv`.  
+Break the variable `mon` into three variables `y`, `m`, `day`, then remove the first two variables.  
+Variables are arranged by order of `year`, `month`, `president`, ... .
 
 ```{r, message = FALSE}
 pols_data =
@@ -24,7 +28,6 @@ pols_data =
   janitor::clean_names() |>
   separate(mon, into = c("year", "month", "day"), "-") |>
   mutate(month = month.name[as.numeric(month)]) |>
-  mutate(year_month = paste(year, month, sep = "-")) |>
   #the same as
   #mutate(month = case_match(month, case_match(month,"01"~"Jan"), ...)
   #OR using
@@ -34,26 +37,32 @@ pols_data =
     prez_dem != "0" ~ "dem"
   )) |>
   select(-c("day", "prez_gop", "prez_dem")) |>
-  select(year_month, year, month, president, everything())
+  select(year, month, president, everything())
 head(pols_data, 5)
 ```
 
-`snp_data` is from `snp.csv`. Variables are arranged by order of `year-month`, `year`, `month`, `close`.
+**(1.1.2)** `snp_data` is from `snp.csv`.
+Use function `ifelse()` to correct year format, then switch it back to character type.  
+Turn variable `month` from number into month.name format.  
+Variables are arranged by order of `year`, `month`, `close`.
 
 ```{r, message = FALSE}
 snp_data =
   read_csv("./datastore/snp.csv") |>
   janitor::clean_names() |>
   separate(date, into = c("month", "day", "year"), "/") |>
-  mutate(year = str_replace_all((ifelse(year >= 30 & year <= 99,  paste("19", year), paste("20", year))),"[^0-9]", "")) |>
+  mutate(year = as.numeric(year)) |>
+  mutate(year = ifelse(year >= 30 & year <= 99,  1900+year, 2000+year)) |>
+  mutate(year = as.character(year)) |>
   mutate(month = month.name[as.numeric(month)]) |>
-  mutate(year_month = paste(year, month, sep = "-")) |>
   select(-day) |>
-  select(year_month, year, month, everything())
+  select(year, month, everything())
 head(snp_data, 5)
 ```
 
-`unemployment_data` is from `unemployment.csv`. Variables are arranged by order of `year-month`, `year`, `month`, `unemployment_rate`.
+**(1.1.3)** `unemployment_data` is from `unemployment.csv`.  
+Reorganize the dataset by creating two new variables `month` and `unemployment`, using function `pivot_longer()`.  
+Variables are arranged by order of `year`, `month`, `unemployment_rate`.
 
 ```{r, message = FALSE}
 unemployment_data =
@@ -65,90 +74,226 @@ unemployment_data =
     values_to = "unemployment_rate"
   ) |>
   mutate(month = month.name[match(str_to_title(month), month.abb)]) |>
-  mutate(year_month = paste(year, month, sep = "-")) |>
-  select(year_month, year, month, everything())
+  select(year, month, everything())
 head(unemployment_data, 5)
 ```
 
 ### Problem 1.2 JOINING DATASETS
-```{r, message = FALSE}
-pols_snp = inner_join(pols_data, snp_data, by = "year_month") |>
-  rename(year = year.x, month = month.x) |>
-  select(year_month, year, month, president, close) |>
-  arrange(year)
-head(pols_snp, 5)
-```
+
+Create variable `year_month` combining variable `year` and `month`, then merge the data by variable `year_month`.
 
 ```{r, message = FALSE}
-skimr::skim(pols_snp)
+pols_join =
+  pols_data |>
+  mutate(year_month = paste(year, month, sep = "-")) |>
+  select(year_month, everything())
+
+snp_join =
+  snp_data |>
+  mutate(year_month = paste(year, month, sep = "-")) |>
+  select(year_month, everything())
+
+unemployment_join =
+  unemployment_data |>
+  mutate(year_month = paste(year, month, sep = "-")) |>
+  select(year_month, everything())
+
+pols_snp = left_join(pols_join, snp_join, by = "year_month") |>
+  select(-year.y, -month.y) |>
+  select(year_month, year = year.x, month = month.x, president, close, everything()) |>
+  arrange(year)
+head(pols_snp, 5)
+
+pols_snp_unemployment = left_join(pols_snp, unemployment_join, by = "year_month") |>
+  select(-year.y, -month.y) |>
+  select(year_month, year = year.x, month = month.x, president, close, unemployment_rate, everything()) |>
+  arrange(year)
+head(pols_snp_unemployment, 5)
 ```
+
+### Problem 1.3 DATA REVIEW
+
+We can use `skim()` to grab some key characters of the dataset.
+
+```{r, message = FALSE}
+skimr::skim(pols_snp_unemployment)
+```
+
+(a) `pols_data` contains 822 obs. of 9 variables. The key variables are `year`, `month`, `president`.
+(b) `snp_data` contains 787 obs. of 4 variables. The key variables are `year`, `month`, `close`.
+(c) `unemployment_data` contains 816 obs. of 3 variables. The key variables are `year`, `month`, `unemployment_rate`.
 
 ## Problem 2
 
 ### Problem 2.1 DATA CLEANING
 
+**(2.1.1)** `mrt_data` is from sheet `Mr. Trash Wheel`.  
+Break the variable `date` into three variables `y`, `m`, `day`, then remove the first two variables and get variable `day`.  
+Calculate the `homes_powered` using data in `weight_tons`, according to the given formula.  
+Create a label(column `sourcename`) for this dataset.  
+Variables are arranged by order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
+
 ```{r, message = FALSE}
 mrt_data =
-  read_excel("./datastore/202207 Trash Wheel Collection Data.xlsx", sheet = 1, range = "A2:N549") |>
+  read_excel("./datastore/202309 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N586") |>
   janitor::clean_names() |>
   separate(date, into=c("y", "m", "day"), sep = "-") |>
   select(-y, -m) |>
   mutate(year = as.character(year)) |>
   mutate(homes_powered = weight_tons*500/30) |>
   mutate(sourcename = "Mr. Trash Wheel") |>
-  select(sourcename, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts)
+  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, plastic_bags, wrappers)
 head(mrt_data, 5)
+```
 
+**(2.1.2)** `pro_data` is from sheet `Professor Trash Wheel`.  
+Break the variable `date` into three variables `y`, `m`, `day`, then remove the first two variables and get variable `day`.  
+Calculate the `homes_powered` using data in `weight_tons`, according to the given formula.  
+Create a label(column `sourcename`) for this dataset.  
+Variables are arranged by order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
+
+```{r, message = FALSE}
 pro_data =
-  read_excel("./datastore/202207 Trash Wheel Collection Data.xlsx", sheet = 2, range = "A2:M96") |>
+  read_excel("./datastore/202309 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M108") |>
   janitor::clean_names() |>
   separate(date, into=c("y", "m", "day"), sep = "-") |>
   select(-y, -m) |>
   mutate(year = as.character(year)) |>
   mutate(homes_powered = weight_tons*500/30) |>
   mutate(sourcename = "Professor Trash Wheel") |>
-  select(sourcename, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts)
+  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, plastic_bags, wrappers)
 head(pro_data, 5)
+```
 
+**(2.1.3)** `gwy_data` is from sheet `Gwynnda Trash Wheel`.  
+Break the variable `date` into three variables `y`, `m`, `day`, then remove the first two variables and get variable `day`.  
+Calculate the `homes_powered` using data in `weight_tons`, according to the given formula.  
+Create a label(column `sourcename`) for this dataset.  
+Variables are arranged by order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
+
+```{r, message = FALSE}
 gwy_data =
-  read_excel("./datastore/202207 Trash Wheel Collection Data.xlsx", sheet = 4, range = "A2:K108") |>
+  read_excel("./datastore/202309 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L157") |>
   janitor::clean_names() |>
   separate(date, into=c("y", "m", "day"), sep = "-") |>
   select(-y, -m) |>
   mutate(year = as.character(year)) |>
   mutate(homes_powered = weight_tons*500/30) |>
   mutate(sourcename = "Gwynnda") |>
-  select(sourcename, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts)
+  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, plastic_bags, wrappers)
 head(gwy_data, 5)
-
-total_data = 
-  bind_rows(mrt_data, pro_data, gwy_data) |>
-  arrange(year, match(month, month.name), day)
-head(total_data, 5)
 ```
+
+**(2.1.4)** Then merge all three datasets together.
 
 ```{r, message = FALSE}
-skimr::skim(total_data)
+total_trash_data = 
+  bind_rows(mrt_data, pro_data, gwy_data) |>
+  arrange(year, match(month, month.name), day)
+head(total_trash_data, 5)
 ```
 
-`#` of observations in resulting dataset is `r nrow(total_data)``.
-total weight collected by Professor Trash Wheel is `r total_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(weight_tons))`
+### Problem 2.2 DATA REVIEW
 
-`r total_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(cigarette_butts))`
+We can use `skim()` to grab some key characters of the dataset. 
 
-` total_data |> filter(sourcename == "Professor Trash Wheel") |> sum(weight_tons)`
+```{r, message = FALSE}
+skimr::skim(total_trash_data)
+```
 
-` total_data |> filter(sourcename == "Professor Trash Wheel") |> sum(pull(weight_tons))`.
-
+(a) The total number of observations in result dataset is `r nrow(total_trash_data)`. Variables number in result dataset is `r ncol(total_trash_data)`.
+(b) The variables included in dataset are `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons`, `volume_cubic_yards`, `plastic_bottles`, `polystyrene`, `cigarette_butts`, `plastic_bags`, `wrappers`. Key variables `year`, `month`, `day` indicate the record time, `weight_tons` indicates the amount of trash collected, `homes_powered` indicates number of homes being powered by using trash recycle tech, and `sourcename` indicates from which sheet we get the corresponding data.
+(c) Total weight collected by Professor Trash Wheel is `r total_trash_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(weight_tons)) |> pull()` (or using another formula `r #sum(total_trash_data$weight_tons[total_data$sourcename == "Professor Trash Wheel"])`).
+(d) Total number of cigarette butts collected by Gwynnda in July of 2021 is `r total_trash_data |> filter(sourcename == "Professor Trash Wheel" & year == "2021" & month == "July") |> summarise(sum(cigarette_butts)) |> pull()`.
 
 ## Problem 3
 
 ### Problem 3.1 DATA CLEANING
 
+For dataset `MCI_baseline.csv`, we notice that there're two rows delineating info of the data. During cleaning process, we shall skip them in order to grab the raw data we want.
 
+```{r}
+bas_data_clean =
+  read_csv("./datastore/MCI_baseline.csv", skip = 1) |>
+  janitor::clean_names() |>
+  mutate(sex = case_when(
+    sex == 1 ~ "Male",
+    sex == 0 ~ "Female"
+  )) |>
+  mutate(apoe4 = case_when(
+    apoe4 == 1 ~ "carrier",
+    apoe4 == 0 ~ "non-carrier"
+  )) |>
+  mutate(age_at_onset = ifelse(age_at_onset == '.', NA, age_at_onset)) |>
+  filter(current_age < age_at_onset | is.na(age_at_onset)) |>
+  mutate(age_at_onset = as.numeric(age_at_onset))
+head(bas_data_clean, 5)
 
+bas_data_dropna =
+  bas_data_clean |>
+  drop_na(age_at_onset)
+head(bas_data_dropna)
 
+bas_data =
+  read_csv("./datastore/MCI_baseline.csv", skip = 1) |>
+  janitor::clean_names() |>
+  mutate(sex = case_when(
+    sex == 1 ~ "Male",
+    sex == 0 ~ "Female"
+  )) |>
+  mutate(apoe4 = case_when(
+    apoe4 == 1 ~ "carrier",
+    apoe4 == 0 ~ "non-carrier"
+  )) |>
+  mutate(age_at_onset = ifelse(age_at_onset == '.', NA, age_at_onset))
+head(bas_data, 5)
 
+amy_data =
+  read_csv("./datastore/mci_amyloid.csv", skip = 1) |>
+  janitor::clean_names() |>
+  select(id = study_id, year_0 = baseline, year_2 = time_2, year_4 = time_4, year_6 = time_6, year_8 = time_8) |>
+  pivot_longer(
+    year_0:year_8,
+    names_to = "time",
+    values_to = "ratio"
+  )
+head(amy_data, 5)
+```
 
+### Problem 3.2 DATA REVIEW
 
+(a) There're `r nrow(bas_data)` participants recruited in the research. From the data, we notice `r nrow(bas_data_dropna)` participants develop MCI.
+(b) The average baseline age is `r mean(pull(bas_data_clean, current_age))`. For participants developing MCI, the average baseline age is `r mean(pull(bas_data_dropna, current_age))`.
+(c) The proportion of women are APOE4 carriers is `r (count(bas_data_clean |> filter(sex=="Female" & apoe4=="carrier")) |> pull()) / (count(bas_data_clean |> filter(sex=="Female")) |> pull())`.
+(d) 
+
+```{r}
+#manipulate in dataset
+baseline_only = anti_join(bas_data_clean, amy_data, by = "id")
+amyloid_only = anti_join(amy_data, bas_data_clean, by = "id")
+```
+
+```{r}
+#grab diff data
+only_baseline = setdiff(bas_data_clean$id, amy_data$id)
+only_amyloid = setdiff(amy_data$id, bas_data_clean$id)
+```
+
+After processing, `r nrow(baseline_only)` participants only appear in baseline dataset. IDs of these participants are shown below: 
+`r only_baseline`.  
+
+`r nrow(amyloid_only)` participants only appear in baseline dataset. IDs of these participants are shown below:
+`r only_amyloid`. 
+
+(e) 
+```{r}
+#combine two datasets into one, with only participants appearing in both datasets
+bas_amy = inner_join(bas_data_clean, amy_data, by = "id")
+```
+There're `r length(unique(pull(bas_amy, id)))` participants appear in both dataset. Because ratio data of each participant is posted for 5 times (in different time intervals), ID of every participant has been shown 5 times. `r ncol(bas_amy)` variables are listed in combined dataset, included `id`, `current_age`, `sex`, `education`, apoe4`, `age_at_onset`, `time`, `ratio`.  
+(f) The combined data has been saved as `combined_bas_amy.csv`.
+
+```{r}
+write.csv(bas_amy, file = "./datastore/combined_bas_amy.csv")
+```
 
