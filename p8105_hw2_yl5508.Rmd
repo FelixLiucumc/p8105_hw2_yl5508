@@ -18,10 +18,6 @@ options(digits = 2)
 
 ### Problem 1.1 DATA CLEANING
 
-**(1.1.1)** `pols_data` is from `pols-month.csv`.  
-Break the variable `mon` into three variables `y`, `m`, `day`, then remove the first two variables.  
-Variables are arranged by order of `year`, `month`, `president`, ... .
-
 ```{r, message = FALSE}
 pols_data =
   read_csv("./datastore/pols-month.csv") |>
@@ -41,10 +37,9 @@ pols_data =
 head(pols_data, 5)
 ```
 
-**(1.1.2)** `snp_data` is from `snp.csv`.
-Use function `ifelse()` to correct year format, then switch it back to character type.  
-Turn variable `month` from number into month.name format.  
-Variables are arranged by order of `year`, `month`, `close`.
+**1.1.1** `pols_data` is from `pols-month.csv`, with `r nrow(pols_data)` obs. and `r ncol(pols_data)` variables.  
+Break the variable `mon` into three variables `y`, `m`, `day`, then remove the first two variables.  
+Variables are arranged in order of `year`, `month`, `president`, ... .
 
 ```{r, message = FALSE}
 snp_data =
@@ -60,9 +55,10 @@ snp_data =
 head(snp_data, 5)
 ```
 
-**(1.1.3)** `unemployment_data` is from `unemployment.csv`.  
-Reorganize the dataset by creating two new variables `month` and `unemployment`, using function `pivot_longer()`.  
-Variables are arranged by order of `year`, `month`, `unemployment_rate`.
+**1.1.2** `snp_data` is from `snp.csv`, with `r nrow(snp_data)` obs. and `r ncol(snp_data)` variables.  
+Use function `ifelse()` to correct year format, then switch it back to character type.  
+Turn variable `month` from number into month.name format.  
+Variables are arranged in order of `year`, `month`, `close`.
 
 ```{r, message = FALSE}
 unemployment_data =
@@ -77,6 +73,10 @@ unemployment_data =
   select(year, month, everything())
 head(unemployment_data, 5)
 ```
+
+**1.1.3** `unemployment_data` is from `unemployment.csv`, with `r nrow(unemployment_data)` obs. and `r ncol(unemployment_data)` variables.   
+Reorganize the dataset by creating two new variables `month` and `unemployment`, using function `pivot_longer()`.  
+Variables are arranged in order of `year`, `month`, `unemployment_rate`.
 
 ### Problem 1.2 JOINING DATASETS
 
@@ -119,19 +119,13 @@ We can use `skim()` to grab some key characters of the dataset.
 skimr::skim(pols_snp_unemployment)
 ```
 
-(a) `pols_data` contains 822 obs. of 9 variables. The key variables are `year`, `month`, `president`.
-(b) `snp_data` contains 787 obs. of 4 variables. The key variables are `year`, `month`, `close`.
-(c) `unemployment_data` contains 816 obs. of 3 variables. The key variables are `year`, `month`, `unemployment_rate`.
+(a) `pols_data` contains `r nrow(pols_data)` obs. of `r ncol(pols_data)` variables. The key variables are `year`, `month`, `president`.  
+(b) `snp_data` contains `r nrow(snp_data)` obs. of `r ncol(snp_data)` variables. The key variables are `year`, `month`, `close`.  
+(c) `unemployment_data` contains `r nrow(unemployment_data)` obs. of `r ncol(unemployment_data)` variables. The key variables are `year`, `month`, `unemployment_rate`.
 
 ## Problem 2
 
 ### Problem 2.1 DATA CLEANING
-
-**(2.1.1)** `mrt_data` is from sheet `Mr. Trash Wheel`.  
-Break the variable `date` into three variables `y`, `m`, `day`, then remove the first two variables and get variable `day`.  
-Calculate the `homes_powered` using data in `weight_tons`, according to the given formula.  
-Create a label(column `sourcename`) for this dataset.  
-Variables are arranged by order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
 
 ```{r, message = FALSE}
 mrt_data =
@@ -146,11 +140,11 @@ mrt_data =
 head(mrt_data, 5)
 ```
 
-**(2.1.2)** `pro_data` is from sheet `Professor Trash Wheel`.  
+**2.1.1** `mrt_data` is from sheet `Mr. Trash Wheel`, with `r nrow(mrt_data)` obs. and `r ncol(mrt_data)` variables.  
 Break the variable `date` into three variables `y`, `m`, `day`, then remove the first two variables and get variable `day`.  
 Calculate the `homes_powered` using data in `weight_tons`, according to the given formula.  
 Create a label(column `sourcename`) for this dataset.  
-Variables are arranged by order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
+Variables are arranged in order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
 
 ```{r, message = FALSE}
 pro_data =
@@ -165,11 +159,11 @@ pro_data =
 head(pro_data, 5)
 ```
 
-**(2.1.3)** `gwy_data` is from sheet `Gwynnda Trash Wheel`.  
+**2.1.2** `pro_data` is from sheet `Professor Trash Wheel`, with `r nrow(pro_data)` obs. and `r ncol(pro_data)` variables.  
 Break the variable `date` into three variables `y`, `m`, `day`, then remove the first two variables and get variable `day`.  
 Calculate the `homes_powered` using data in `weight_tons`, according to the given formula.  
 Create a label(column `sourcename`) for this dataset.  
-Variables are arranged by order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
+Variables are arranged in order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .
 
 ```{r, message = FALSE}
 gwy_data =
@@ -184,7 +178,13 @@ gwy_data =
 head(gwy_data, 5)
 ```
 
-**(2.1.4)** Then merge all three datasets together.
+**2.1.3** `gwy_data` is from sheet `Gwynnda Trash Wheel`, with `r nrow(gwy_data)` obs. and `r ncol(gwy_data)` variables.   
+Break the variable `date` into three variables `y`, `m`, `day`, then remove the first two variables and get variable `day`.  
+Calculate the `homes_powered` using data in `weight_tons`, according to the given formula.  
+Create a label(column `sourcename`) for this dataset.  
+Variables are arranged in order of `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons` ... .  
+
+**2.1.4** Then merge all three datasets together.
 
 ```{r, message = FALSE}
 total_trash_data = 
@@ -204,13 +204,13 @@ skimr::skim(total_trash_data)
 (a) The total number of observations in result dataset is `r nrow(total_trash_data)`. Variables number in result dataset is `r ncol(total_trash_data)`.
 (b) The variables included in dataset are `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons`, `volume_cubic_yards`, `plastic_bottles`, `polystyrene`, `cigarette_butts`, `plastic_bags`, `wrappers`. Key variables `year`, `month`, `day` indicate the record time, `weight_tons` indicates the amount of trash collected, `homes_powered` indicates number of homes being powered by using trash recycle tech, and `sourcename` indicates from which sheet we get the corresponding data.
 (c) Total weight collected by Professor Trash Wheel is `r total_trash_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(weight_tons)) |> pull()` (or using another formula `r #sum(total_trash_data$weight_tons[total_data$sourcename == "Professor Trash Wheel"])`).
-(d) Total number of cigarette butts collected by Gwynnda in July of 2021 is `r total_trash_data |> filter(sourcename == "Professor Trash Wheel" & year == "2021" & month == "July") |> summarise(sum(cigarette_butts)) |> pull()`.
+(d) Total number of cigarette butts collected by Gwynnda in July of 2021 is `r total_trash_data |> filter(sourcename == "Gwynnda" & year == "2021" & month == "July") |> summarise(sum(cigarette_butts)) |> pull()`.
 
 ## Problem 3
 
 ### Problem 3.1 DATA CLEANING
 
-For dataset `MCI_baseline.csv`, we notice that there're two rows delineating info of the data. During cleaning process, we shall skip them in order to grab the raw data we want.
+For dataset `mci_baseline.csv` and `mci_amyloid.csv`, we notice that there're two rows delineating info of the data. During cleaning process, we shall skip them in order to grab the raw data we want.
 
 ```{r}
 bas_data_clean =
@@ -262,7 +262,7 @@ head(amy_data, 5)
 
 ### Problem 3.2 DATA REVIEW
 
-(a) There're `r nrow(bas_data)` participants recruited in the research. From the data, we notice `r nrow(bas_data_dropna)` participants develop MCI.
+(a) There're `r nrow(bas_data)` participants recruited in the research. From the data, we notice `r nrow(bas_data_dropna)` participants develop MCI (deem NA as healthy condition, with NA the number would be `r nrow(bas_data_clean)`).
 (b) The average baseline age is `r mean(pull(bas_data_clean, current_age))`. For participants developing MCI, the average baseline age is `r mean(pull(bas_data_dropna, current_age))`.
 (c) The proportion of women are APOE4 carriers is `r (count(bas_data_clean |> filter(sex=="Female" & apoe4=="carrier")) |> pull()) / (count(bas_data_clean |> filter(sex=="Female")) |> pull())`.
 (d) 
@@ -282,7 +282,7 @@ only_amyloid = setdiff(amy_data$id, bas_data_clean$id)
 After processing, `r nrow(baseline_only)` participants only appear in baseline dataset. IDs of these participants are shown below: 
 `r only_baseline`.  
 
-`r nrow(amyloid_only)` participants only appear in baseline dataset. IDs of these participants are shown below:
+`r nrow(amyloid_only)/5` participants only appear in baseline dataset. IDs of these participants are shown below:
 `r only_amyloid`. 
 
 (e) 
@@ -290,7 +290,8 @@ After processing, `r nrow(baseline_only)` participants only appear in baseline d
 #combine two datasets into one, with only participants appearing in both datasets
 bas_amy = inner_join(bas_data_clean, amy_data, by = "id")
 ```
-There're `r length(unique(pull(bas_amy, id)))` participants appear in both dataset. Because ratio data of each participant is posted for 5 times (in different time intervals), ID of every participant has been shown 5 times. `r ncol(bas_amy)` variables are listed in combined dataset, included `id`, `current_age`, `sex`, `education`, apoe4`, `age_at_onset`, `time`, `ratio`.  
+There're `r length(unique(pull(bas_amy, id)))` participants appear in both dataset. Because ratio data of each participant is posted for 5 times (in different time intervals), ID of every participant has been shown 5 times. `r ncol(bas_amy)` variables are listed in combined dataset, included `id`, `current_age`, `sex`, `education`, `apoe4`, `age_at_onset`, `time`, `ratio`.  
+
 (f) The combined data has been saved as `combined_bas_amy.csv`.
 
 ```{r}
