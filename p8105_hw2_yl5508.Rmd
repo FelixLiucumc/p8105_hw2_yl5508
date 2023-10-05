@@ -136,7 +136,7 @@ mrt_data =
   mutate(year = as.character(year)) |>
   mutate(homes_powered = weight_tons*500/30) |>
   mutate(sourcename = "Mr. Trash Wheel") |>
-  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, plastic_bags, wrappers)
+  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, everything())
 head(mrt_data, 5)
 ```
 
@@ -155,7 +155,7 @@ pro_data =
   mutate(year = as.character(year)) |>
   mutate(homes_powered = weight_tons*500/30) |>
   mutate(sourcename = "Professor Trash Wheel") |>
-  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, plastic_bags, wrappers)
+  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, everything())
 head(pro_data, 5)
 ```
 
@@ -174,7 +174,7 @@ gwy_data =
   mutate(year = as.character(year)) |>
   mutate(homes_powered = weight_tons*500/30) |>
   mutate(sourcename = "Gwynnda") |>
-  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, plastic_bags, wrappers)
+  select(sourcename, dumpster, year, month, day, homes_powered, weight_tons, everything())
 head(gwy_data, 5)
 ```
 
@@ -202,8 +202,8 @@ skimr::skim(total_trash_data)
 ```
 
 (a) The total number of observations in result dataset is `r nrow(total_trash_data)`. Variables number in result dataset is `r ncol(total_trash_data)`.
-(b) The variables included in dataset are `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons`, `volume_cubic_yards`, `plastic_bottles`, `polystyrene`, `cigarette_butts`, `plastic_bags`, `wrappers`. Key variables `year`, `month`, `day` indicate the record time, `weight_tons` indicates the amount of trash collected, `homes_powered` indicates number of homes being powered by using trash recycle tech, and `sourcename` indicates from which sheet we get the corresponding data.
-(c) Total weight collected by Professor Trash Wheel is `r total_trash_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(weight_tons)) |> pull()` (or using another formula `r #sum(total_trash_data$weight_tons[total_data$sourcename == "Professor Trash Wheel"])`).
+(b) The variables included in dataset are `sourcename`, `dumpster`, `year`, `month`, `day`, `homes_powered`, `weight_tons`, `volume_cubic_yards`, `plastic_bottles`, `polystyrene`, `cigarette_butts`, `plastic_bags`, `wrappers`, ... . Key variables `year`, `month`, `day` indicate the record time, `weight_tons` indicates the amount of trash collected, `homes_powered` indicates number of homes being powered by using trash recycle tech, and `sourcename` indicates from which sheet we get the corresponding data.
+(c) Total weight collected by Professor Trash Wheel is `r total_trash_data |> filter(sourcename == "Professor Trash Wheel") |> summarise(sum(weight_tons)) |> pull()` (or using another formula `r sum(total_trash_data$weight_tons[total_trash_data$sourcename == "Professor Trash Wheel"])`).
 (d) Total number of cigarette butts collected by Gwynnda in July of 2021 is `r total_trash_data |> filter(sourcename == "Gwynnda" & year == "2021" & month == "July") |> summarise(sum(cigarette_butts)) |> pull()`.
 
 ## Problem 3
@@ -262,7 +262,7 @@ head(amy_data, 5)
 
 ### Problem 3.2 DATA REVIEW
 
-(a) There're `r nrow(bas_data)` participants recruited in the research. From the data, we notice `r nrow(bas_data_dropna)` participants develop MCI (deem NA as healthy condition, with NA the number would be `r nrow(bas_data_clean)`).
+(a) There're `r nrow(bas_data)` participants recruited in the research, in which `r nrow(bas_data_clean)` participants meet the criteria. From the data, we notice `r nrow(bas_data_dropna)` participants develop MCI (deem NA as healthy condition).
 (b) The average baseline age is `r mean(pull(bas_data_clean, current_age))`. For participants developing MCI, the average baseline age is `r mean(pull(bas_data_dropna, current_age))`.
 (c) The proportion of women are APOE4 carriers is `r (count(bas_data_clean |> filter(sex=="Female" & apoe4=="carrier")) |> pull()) / (count(bas_data_clean |> filter(sex=="Female")) |> pull())`.
 (d) 
